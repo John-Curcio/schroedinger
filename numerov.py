@@ -1,45 +1,83 @@
+import numpy as np
+
 """
 LANG: Python 2
 Use Numerov method, together with either shooting method or matching method, for 
 solving energy eigenvalues of 1D Schroedinger equation for electron (some eqn)
 """
 omega = 1
-N = 20
-h = 0.05
-x_min = 0
-x_max = x_min * h*N
+N = 100
+xMin = 0
+xMax = 20
+h = (xMax - xMax) / N
+numEigenvalues = 3 #up this to 20 when it's looking good
+phiThreshold = 10**-5
 
-def get_phi(phi_hat, h):
-    phi_hat = phi/(1 - (h**2)/12)
+def V(x):
+    return 0.23 * omega**2 * x**2
 
-def get_phi_hat(phi, h):
-    phi_hat = (1 - (h**2)/12)*phi
+def f(epsilon, x):
+    return V(x) - epsilon
 
-def f(x, epsilon):
-    return 0.25 * (omega**2 ) * x**2 - epsilon
+def getPhi(epsilon, phiHat, x):
+    return phiHat / (1 - (f(epsilon, x) * h**2)/12)
 
-def get_phi_2(x_1, phi_1, phi_0, epsilon):
-    phi_0_hat = get_phi_hat(phi_0, h)
-    phi_1_hat = get_phi_hat(phi_1, h)
-    phi_2_hat = 2*phi_1_hat + (h**2)*f(x_1, epsilon)*phi_1 - phi_0_hat
-    return get_phi(phi_2_hat)
+def getPhiHat(epsilon, phi, x):
+    return phi * (1 - (f(epsilon, x) * h**2)/12)
 
-def get_x_vals():
-    x_vals = [None]*N
-    for i in xrange(0, N):
-        x_vals[i] = i*h + x_min
-    return x_vals
+def numerov(epsilon, xMin, xMax, N):
+    x = xMin
+    phiValues = [None]*N
+    phiValues[0] = 0
+    phiValues[1] = 1
+    for i in range(1, N - 1):
+        currPhi = phiValues[i]
+        prevPhi = phiValues[i - 1]
+        currPhiHat = getPhiHat(epsilon, currPhi, x)
+        prevPhiHat = getPhiHat(epsilon, prevPhi, x)
+        nextPhiHat = 2*currPhiHat + h**2 * f(epsilon, x) * currPhi - prevPhiHat
+        phiValues[i+1] = getPhi(epsilon, nextPhiHat, x)
+    # normalize by C
+    C = phiValues[0]**2 + phiValues[-1]**2
+    for i in range(1, len(phiValues)-1):
+        coeff = (2**(i % 2))*2
+        C += coeff * phiValues[i]
+    C *= (h / 3)
+    return phiValues[-1] / (C**0.5) #only care about what we get as x --> inf
 
-def shoot():
-    x_vals = get_x_vals()
-    eigenstates = [1]*N
-    eigenvalues = [1]*N
-    eigenstates[0] = 0
-    eigenstates[1] = 1
-    for i in xrange(2, N):
-        while(not almost_eq(eigenstates[i]**2, 0))
-            eigenstates[i] = get_phi_2(x_vals[i-1], eigenstates[i-1], eigenstates[i-2], eigenvalues[i-1])
+def shoot(prevEigenvalue):
+    # basically do binary search to find the eigenvalue that works.
+    epsilonLo = prevEigenvalue
+    epsilonHi = prevEigenvalue + 1 #TODO: this is just a PLACEHOLDER. it SUCKS.
+    epsilonMid = (epsilonLo + epsilonHi)/2
+    phiLo, phiMid, phiHi = None, None, None
+    iters = 0
+    while(phiMid == None or abs(phiMid) > phiThreshold):
+        phiLo = numerov(epsilonLo, xMin, xMax, N)
+        phiHi = numerov(epsilonHi, xMin, xMax, N)
+        if phiLo * phiHi > 0:
+            epsilonHi += 1 #this should only have to happen once at the very beginning, if at all. TODO: IT SUCKS ASS
+        else:
+            phiMid = numerov(epsilonMid, xMin, xMax, N)
+            if phiLo * phiMid:
+                epsilonHi = epsilonMid
+            else:
+                epsilonLo = epsilonMid
+            epsilonMid = (epsilonLo + epsilonHi)/2
+        iters += 1
+        assert(iters < 1000)
+    return epsilonMid
+
+def main():
+    return None
+    eigenvalues = [None]*20
+    eigenvalues[0] = shoot(0)
+    for n in range(1, len(20)):
+        eigenvalues[n] = shoot(eigenvalues[n-1])
+    print("heres the main")
 
 if __name__ == '__main__':
-    print f(1, 1)
-    #main()
+    defaultParams = input("Would you like to use the default parameters? [Y/N]: ")
+    if defaultParams.strip() == "Y" or defaultParams.strip() == "y":
+        print("okay")
+    main()
