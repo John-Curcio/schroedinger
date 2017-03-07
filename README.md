@@ -1,6 +1,6 @@
 Here's my submission for a project in my Advanced Computational Physics class (33-456). In this code, I use the Numerov method, together with the shooting method, for solving the energy eigenvalues of the following 1D Schroedinger equation:
 
-![equation](equation.jpeg)
+![equation](equation.JPG)
 
 Omega is an input parameter proportional to the frequency.
 
