@@ -1,99 +1,86 @@
 import numpy as np
-import matplotlib.pyplot as plt 
-"""
-LANG: Python 3
-Use Numerov method, together with either shooting method or matching method, for 
-solving energy eigenvalues of 1D Schroedinger equation for electron (some eqn)
-"""
-omega = 1
-# N = 100
-# xMin = 0
-# xMax = 1
-# h = abs(xMax - xMin) / N
-# numEigenvalues = 3 #up this to 20 when it's looking good
-phiThreshold = 10**-5
 
-def V(x):
-    return 0.25 * omega**2 * x**2
 
-def f(epsilon, x):
-    return V(x) - epsilon
+# LANG: Python 3
+# Use Numerov method, together with either shooting method or matching method, for 
+# solving energy eigenvalues of 1D Schroedinger equation for electron (some eqn)
 
-def getPhi(epsilon, h, phiHat, x):
-    return phiHat / (1 - (f(epsilon, x) * h**2)/12)
+def externalPotential(x, omega=1):
+    return 0.25 * (omega**2) * (x**2)
 
-def getPhiHat(epsilon, h, phi, x):
-    return phi * (1 - (f(epsilon, x) * h**2)/12)
+def f(epsilon, x, omega=1):
+    return externalPotential(x, omega=omega) - epsilon
 
-def numerov(epsilon, xMin, xMax, N):
-    h = abs(xMax - xMin) / N
-    x = xMin
-    phiValues = [None]*N
-    phiValues[0] = 0
-    phiValues[1] = 1
-    for i in range(1, N - 1):
-        currPhi = phiValues[i]
-        prevPhi = phiValues[i - 1]
-        currPhiHat = getPhiHat(epsilon, h, currPhi, x)
-        prevPhiHat = getPhiHat(epsilon, h, prevPhi, x)
-        nextPhiHat = 2*currPhiHat + h**2 * f(epsilon, x) * currPhi - prevPhiHat
-        phiValues[i+1] = getPhi(epsilon, h, nextPhiHat, x)
-    # normalize by C
-    # C = (h/3) * (g_0 + 4g_1 + 2g_2 + 4g_3 + 2g_4 + ... + 2g_{N-2} + 4g_{N-1} + g_N)
-    C = phiValues[0]**2 + phiValues[-1]**2
-    for i in range(1, len(phiValues)-1):
-        coeff = (2**(i % 2))*2
-        C += coeff * phiValues[i]**2
-    C *= (h/3)
-    return phiValues[-1] / (C**0.5) #only care about what we get as x --> inf
+def getPhiVals(epsilon, omega=1, xMax = 1, xMin=0, N=1000):
+    h = abs(xMax - xMin)/N
+    xVals = [xMin + i*h for i in range(N+1)]
+    fVals = [f(epsilon, xVals[i], omega) for i in range(N+1)]
+    phiVals = [None]*(N+1)
+    phiVals[0] = 0
+    phiVals[1] = 1
+    for i in range(1, N):
+        prevPhiHat = (1 - (1/12)*(h**2)*fVals[i-1])*phiVals[i-1]
+        nextPhiHat = (2 + (5/6)*(h**2)*fVals[i])*phiVals[i] - prevPhiHat
+        # nextPhiHat = (2 - (5/6)*(h**2)*fVals[i])*phiVals[i] - prevPhiHat #idk, i'm just pulling this from some pdf
+        phiVals[i+1] = nextPhiHat / (1 - (1/12)*(h**2)*fVals[i+1])
+    #now to normalize
+    C = 0
+    for i in range(1, N):
+        C += (2*h/3)*(1 + i%2) * phiVals[i]**2
+    C += (h/3)*phiVals[0] + (h/3)*phiVals[N]
+    for i in range(len(phiVals)):
+        phiVals[i] = phiVals[i]/np.sqrt(C)
+    return phiVals
 
-# def shoot(prevEigenvalue):
-#     # basically do binary search to find the eigenvalue that works.
-#     epsilonLo = prevEigenvalue
-#     epsilonHi = prevEigenvalue + 1 #TODO: this is just a PLACEHOLDER. it SUCKS.
-#     epsilonMid = (epsilonLo + epsilonHi)/2
-#     phiLo, phiMid, phiHi = None, None, None
-#     iters = 0
-#     while(phiMid == None or abs(phiMid) > phiThreshold):
-#         phiLo = numerov(epsilonLo, xMin, xMax, N)
-#         phiHi = numerov(epsilonHi, xMin, xMax, N)
-#         if phiLo * phiHi > 0:
-#             epsilonHi += 1 #this should only have to happen once at the very beginning, if at all. TODO: IT SUCKS ASS
-#             epsilonLo -= 1
-#         else:
-#             phiMid = numerov(epsilonMid, xMin, xMax, N)
-#             if phiLo * phiMid:
-#                 epsilonHi = epsilonMid
-#             else:
-#                 epsilonLo = epsilonMid
-#             epsilonMid = (epsilonLo + epsilonHi)/2
-#         iters += 1
-#         assert(iters < 1000)
-#     return epsilonMid
 
-# def match(N):
-#     epsilonLo = prevEigenvalue
-#     epsilonHi = prevEigenvalue + 1 #TODO: this is just a PLACEHOLDER. it SUCKS.
-#     epsilonMid = (epsilonLo + epsilonHi)/2
-#     phiL = [None]*
-# def main():
-#     return None
-#     eigenvalues = [None]*20
-#     eigenvalues[0] = shoot(0)
-#     for n in range(1, len(20)):
-#         eigenvalues[n] = shoot(eigenvalues[n-1])
-#     print("heres the main")
+def getWaveFunctionVals():
+    numEpsilonVals = 100
+    maxEpsilonVal = 5
+    minEpsilonVal = 0
+    epsilonVals = [(i+1)*(maxEpsilonVal - minEpsilonVal)/numEpsilonVals for i in range(numEpsilonVals)]
+    
+    xMin = -10
+    xMax = 10
+    N = 100000
+    #defining the following 2 because useful for plotting
+    h = abs(xMax - xMin)/N
+    xVals = [xMin + i*h for i in range(N+1)]
+    # 2D list. rows correspond to series from numerov recursion. columns 
+    # correspond to column'th value in the recursion  over all epsilons
+    phiVals = [None]*numEpsilonVals
+    lastPhiVals = [None]*numEpsilonVals
+
+
+    for i in range(len(epsilonVals)):
+        phiVals[i] = getPhiVals(epsilonVals[i], xMin=xMin, xMax=xMax, N=N)
+        lastPhiVals[i] = phiVals[i][-1]
+        # plt.plot(xVals, phiVals[i])
+    for i in range(len(lastPhiVals)):
+        if abs(lastPhiVals[i]) < 0.01:
+            print(epsilonVals[i])
+
+    try:
+        import matplotlib.pyplot as plt 
+        from mpl_toolkits.mplot3d import Axes3D
+        from matplotlib import cm
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        X, Y = np.meshgrid(xVals, epsilonVals)
+        Z = np.array(phiVals).reshape(X.shape)
+        surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm)
+        # ax.scatter([xVals for _ in range(len(phiVals))], phiVals)
+        # plt.figure(1)
+        # plt.xlabel("x values")
+        # plt.ylabel("wave amplitudes")
+        ax.set_xlabel("x values")
+        ax.set_ylabel("$\epsilon$ values")
+        ax.set_zlabel("wave amplitudes")
+        ax.set_zlim(0, 1)
+        fig.colorbar(surf, shrink=0.5, aspect=10)
+        plt.show()
+    except:
+        print("that's all folks")
+
 
 if __name__ == '__main__':
-    n = 1000
-    phiEndVals = [None]*n
-    for i in range(n):
-        phiEndVals[i] = numerov(10000*i/n, 0, 1, 1000)
-    # print("hello")
-    plt.plot([10000*i/n for i in range(n)], phiEndVals)
-    plt.show()
-    # print(phiEndVals)
-    # defaultParams = input("Would you like to use the default parameters? [Y/N]: ")
-    # if defaultParams.strip() == "Y" or defaultParams.strip() == "y":
-    #     print("okay")
-    # main()
+    getWaveFunctionVals()
