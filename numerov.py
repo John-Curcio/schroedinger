@@ -1,5 +1,5 @@
 import numpy as np
-
+import sys
 
 # LANG: Python 3
 # Use Numerov method, together with either shooting method or matching method, for 
@@ -22,7 +22,6 @@ def numerov(epsilon, omega=1, xMax = 1, xMin=0, N=1000):
     for i in range(1, N):
         prevPhiHat = (1 - (1/12)*(h**2)*fVals[i-1])*phiVals[i-1]
         nextPhiHat = (2 + (5/6)*(h**2)*fVals[i])*phiVals[i] - prevPhiHat
-        # nextPhiHat = (2 - (5/6)*(h**2)*fVals[i])*phiVals[i] - prevPhiHat #idk, i'm just pulling this from some pdf
         phiVals[i+1] = nextPhiHat / (1 - (1/12)*(h**2)*fVals[i+1])
     return phiVals
 
@@ -90,7 +89,7 @@ def shoot(epsilon1, epsilon2, omega, xMin, xMax, N, threshold=10**-3):
     epsilonMid = (epsilonHi + epsilonLo)/2
     phiMid = numerov(epsilonMid, omega=omega, xMax = xMax, xMin=xMin, N=N)[-1]
     while(abs(epsilonHi - epsilonLo) > threshold):
-        # if phiLo * phiMid < 0:
+        # equivalent to "if phiLo * phiMid < 0:", but without fear of overflow
         if (phiLo > 0 and phiMid < 0) or (phiLo < 0 and phiMid > 0):
             epsilonHi = epsilonMid
             phiHi = phiMid
@@ -125,10 +124,8 @@ def match(epsilon1, epsilon2, omega, xMin, xMax, N, threshold=10**-3):
         deltaMid = getDelta(epsilonMid, omega=omega, xMin=xMin, xMax=xMax, N=N)
     return epsilonMid
 
-
 def getEigenvalues(method=shoot, omega=1, xMax = 15, xMin=-15, N=1000, threshold=10**-3, numEigenvalues=20):
     epsilon = 0 
-    #sort of like the nyquist frequency
     epsilonStep = omega/10
     eigenvalues = []
     prevPhiVal = numerov(epsilon, omega=omega, xMax = xMax, xMin=xMin, N=N)[-1]
@@ -166,22 +163,7 @@ def getDelta(epsilon=1.5, omega=1, xMin=-10.0, xMax=10.0, N=10000):
     delta /= h
     return delta
 
-def foo():
-    N = 10
-    epsilonVals = [0.45 + (0.55-0.45)*i/N for i in range(N+1)]
-    phiVals = [None for _ in range(len(epsilonVals))]
-    for i in range(len(epsilonVals)):
-        phiVals[i] = numerov(epsilonVals[i], omega=1, xMax = 11.0, xMin=-11.0, N=1000)[-1]
-    try:
-        import matplotlib.pyplot as plt 
-        plt.plot(epsilonVals, phiVals)
-        plt.show()
-    except:
-        pass
-    for i in range(len(phiVals)):
-        print(epsilonVals[i], phiVals[i])
-
-def plotTrueWaveFunctions(eigenvalues, omega=1.0, xMin=-10, xMax=10, N=10000):
+def plotTrueWaveFunctions(eigenvalues, omega=1.0, xMin=-10, xMax=10, N=10000, title="Plot of Numerov Calculation for Given Epsilon"):
     #defining the following 2 because useful for plotting
     h = (xMax - xMin)/N
     xVals = [(xMin + i*h)*omega for i in range(N+1)]
@@ -191,41 +173,34 @@ def plotTrueWaveFunctions(eigenvalues, omega=1.0, xMin=-10, xMax=10, N=10000):
             waveFunctionVals = getPhiVals(eigenvalue, omega=omega, xMax = xMax, xMin=xMin, N=N)
             plt.plot(xVals, waveFunctionVals)
         plt.ylim(-1, 1)
+        plt.ylabel("Amplitude of Wave Function $\phi$")
+        plt.title(title)
+        plt.xlim(xMin, xMax)
+        plt.xlabel("Positional Parameter $x$")
         plt.show()
     except:
-        pass
+        print("couldn't plot for some reason")
 
 
 if __name__ == '__main__':
-    # getWaveFunctionVals()
-    # pass
-    # foo()
-    # e = shoot(epsilon1=0.4, epsilon2=0.55, 
-    #     omega=1, xMin=-11, xMax=5, N=10000, threshold=10**-5)
-    # e = match(epsilon1=0.4, epsilon2=0.55, 
-    #     omega=1, xMin=-11, xMax=5, N=10000, threshold=10**-5)
-    
-    # print("e is", e)
-
-    # eigenvalues = getEigenvalues(method=shoot, threshold=10**-10)
-    # print(eigenvalues)
-    # plotTrueWaveFunctions(eigenvalues)    
-    
-    # plotTrueWaveFunctions([(n + 0.5) for n in range(20)])
-
-    # print(match(epsilon1=5.49, epsilon2=5.51, omega=1, xMin=-10, xMax=10, N=10000, threshold=10**-6))
-
-    # print(getEigenvalues(method=match, numEigenvalues=10))
-
-    deltas = []
-    epsilonVals = [0.1*e + 3 for e in range(400)]
-    for epsilon in epsilonVals:
-        deltas.append(getDelta(epsilon, xMin=-10, xMax=10))
-    try:
-        import matplotlib.pyplot as plt
-        plt.plot(epsilonVals, deltas)
-        plt.ylim(-1, 1)
-        plt.show()
-    except:
-        pass
-    # print(deltas)
+    omega = float(input("\nspring coefficient (omega): "))
+    N = int(input("number of uniform mesh points (N): "))
+    xMin = float(input("left boundary condition (xMin): "))
+    xMax = float(input("right boundary condition (xMax): "))
+    threshold = float(input("precision threshold for eigenvalue calculation (e.g. 0.0001): "))
+    numEigenvalues = int(input("how many of the first energy eigenvalues to calculate? (>=1): "))
+    plot = input("Would you like to plot the resulting wavefunctions? (Y/N): ")
+    plot = plot.strip()
+    numericalEigenvalues = getEigenvalues(method=shoot, omega=omega, 
+        xMax = xMax, xMin=xMin, N=N, threshold=threshold, numEigenvalues=numEigenvalues)
+    analyticalEigenvalues = [(n + 0.5)*omega for n in range(numEigenvalues)]
+    print("First 20 Eigenvalues:\nAnalytical | Numerical")
+    for i in range(numEigenvalues):
+        print("%.4f     | %.4f"%(analyticalEigenvalues[i], numericalEigenvalues[i]))
+    if plot == "Y" or plot == "y":
+        plotTrueWaveFunctions(numericalEigenvalues, omega=omega, xMin=xMin, 
+            xMax=xMax, N=N, 
+            title="Plot of Wavefunction with Numerically-Calculated Eigenvalues")
+        plotTrueWaveFunctions(analyticalEigenvalues, omega=omega, xMin=xMin, 
+            xMax=xMax, N=N, 
+            title="Plot of Wavefunction with Analytically-Calculated Eigenvalues")
