@@ -20,5 +20,5 @@ You'll be prompted for some input. Below is an example:
 
 If you respond with a `y` to the prompt for plots, you should get plots that look like this:
 
-![numerical](figure_1.PNG)
-![analytical](figure_2.PNG)
+![numerical](figure_1.png)
+![analytical](figure_2.png)
