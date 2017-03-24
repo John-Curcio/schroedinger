@@ -1,6 +1,8 @@
-Here's my submission for the computational quantum mechanics assignment in Advanced Computational Physics (33-456). In this code, I use the shooting method for solving for the energy eigenvalues of the 1D Schroedinger equation with a harmonic oscillator potential.
+Here's my submission for a project in my Advanced Computational Physics class (33-456). In this code, I use the Numerov method, together with the shooting method, for solving the energy eigenvalues of the following 1D Schroedinger equation:
 
-We've already got an analytical solution: ( n + 0.5) * omega for n = 0, 1, 2, ...,
+![equation](equation.PNG)
+
+We've already got an analytical solution: ( n + 0.5) * hbar * omega for n = 0, 1, 2, ...,
 
 For this assignment, I didn't encounter any problems with the shooting method that didn't exist with the matching method as well.
 
