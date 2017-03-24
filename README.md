@@ -1,6 +1,6 @@
 Here's my submission for a project in my Advanced Computational Physics class (33-456). In this code, I use the Numerov method, together with the shooting method, for solving the energy eigenvalues of the following 1D Schroedinger equation:
 
-![equation](equation.PNG)
+![equation](equation.JPG)
 
 We've already got an analytical solution: ( n + 0.5) * hbar * omega for n = 0, 1, 2, ...,
 
