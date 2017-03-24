@@ -17,3 +17,8 @@ To run the code, type the following into the command line:
 You'll be prompted for some input. Below is an example:
 
 ![example](example_input.PNG)
+
+If you respond with a `y` to the prompt for plots, you should get plots that look like this:
+
+![numerical](figure_1.PNG)
+![analytical](figure_2.PNG)

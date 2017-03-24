@@ -200,7 +200,7 @@ if __name__ == '__main__':
     if plot == "Y" or plot == "y":
         plotTrueWaveFunctions(numericalEigenvalues, omega=omega, xMin=xMin, 
             xMax=xMax, N=N, 
-            title="Plot of Wavefunction with Numerically-Calculated Eigenvalues")
+            title="Plot of Wavefunction with Numerically-Calculated Eigenvalues ($\omega$ = %.3f)"%omega)
         plotTrueWaveFunctions(analyticalEigenvalues, omega=omega, xMin=xMin, 
             xMax=xMax, N=N, 
-            title="Plot of Wavefunction with Analytically-Calculated Eigenvalues")
+            title="Plot of Wavefunction with Analytically-Calculated Eigenvalues($\omega$ = %.3f)"%omega)
